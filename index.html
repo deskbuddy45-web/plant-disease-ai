@@ -1,0 +1,258 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plant Disease AI</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #eef7f0;
+      margin: 0;
+      padding: 18px;
+      text-align: center;
+      color: #183b25;
+    }
+
+    .card {
+      background: white;
+      padding: 18px;
+      margin: 15px auto;
+      max-width: 500px;
+      border-radius: 14px;
+      box-shadow: 0 2px 10px #0002;
+    }
+
+    h2 { color: #176b38; }
+
+    button {
+      background: #176b38;
+      color: white;
+      border: 0;
+      border-radius: 8px;
+      padding: 14px 22px;
+      font-size: 16px;
+      margin: 10px;
+    }
+
+    img {
+      width: 100%;
+      border-radius: 10px;
+    }
+
+    #status { font-weight: bold; }
+
+    .prediction {
+      background: #eaf5ec;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
+      text-align: left;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>Plant Disease Detection AI</h2>
+
+  <div class="card">
+    <p id="status">Ready to start</p>
+    <button id="startButton">Capture Leaf and Detect</button>
+    <img id="cameraImage" style="display:none">
+  </div>
+
+  <div class="card">
+    <h3>AI Prediction Results</h3>
+    <div id="results">Waiting for leaf image...</div>
+  </div>
+
+  <canvas id="canvas" width="224" height="224"
+          style="display:none"></canvas>
+
+  <script type="module">
+
+    import {
+      loadLiteRt,
+      loadAndCompile,
+      Tensor
+    } from "https://cdn.jsdelivr.net/npm/@litertjs/core/+esm";
+
+    const CAMERA_URL = "http://192.168.4.1/capture";
+
+    let model = null;
+    let classes = [];
+    let oldImageURL = null;
+
+    const status = document.getElementById("status");
+    const results = document.getElementById("results");
+    const preview = document.getElementById("cameraImage");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d", {
+      willReadFrequently: true
+    });
+
+    async function loadAI() {
+
+      if (model) return;
+
+      status.innerText = "Loading AI model...";
+
+      await loadLiteRt(
+        "https://cdn.jsdelivr.net/npm/@litertjs/core/wasm/"
+      );
+
+      model = await loadAndCompile(
+        "./plant_disease_model_fixed.tflite",
+        { accelerator: "wasm" }
+      );
+
+      const response = await fetch("./plant_classes.json");
+
+      if (!response.ok) {
+        throw new Error("Could not load plant_classes.json");
+      }
+
+      const classData = await response.json();
+
+      classes = Array.isArray(classData)
+        ? classData
+        : (classData.classes || classData.class_names ||
+           Object.values(classData));
+
+      if (classes.length !== 38) {
+        throw new Error("Expected 38 class names, found " +
+                        classes.length);
+      }
+
+      status.innerText = "AI model loaded successfully!";
+    }
+
+    async function captureAndPredict() {
+
+      const response = await fetch(
+        CAMERA_URL + "?t=" + Date.now(),
+        {
+          method: "GET",
+          mode: "cors",
+          cache: "no-store"
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Camera capture failed: " +
+                        response.status);
+      }
+
+      const blob = await response.blob();
+
+      if (!blob.type.includes("image")) {
+        throw new Error("Camera did not return an image");
+      }
+
+      if (oldImageURL) {
+        URL.revokeObjectURL(oldImageURL);
+      }
+
+      oldImageURL = URL.createObjectURL(blob);
+      preview.src = oldImageURL;
+      preview.style.display = "block";
+
+      const bitmap = await createImageBitmap(blob);
+
+      ctx.drawImage(bitmap, 0, 0, 224, 224);
+      bitmap.close();
+
+      const pixels = ctx.getImageData(
+        0, 0, 224, 224
+      ).data;
+
+      const inputData = new Float32Array(
+        224 * 224 * 3
+      );
+
+      let j = 0;
+
+      for (let i = 0; i < pixels.length; i += 4) {
+        inputData[j++] = pixels[i];
+        inputData[j++] = pixels[i + 1];
+        inputData[j++] = pixels[i + 2];
+      }
+
+      const inputTensor = new Tensor(
+        inputData,
+        [1, 224, 224, 3]
+      );
+
+      const outputs = await model.run(inputTensor);
+
+      const scores = await outputs[0].data();
+
+      const ranking = Array.from(scores)
+        .map((score, index) => ({
+          index,
+          score
+        }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 3);
+
+      results.innerHTML = "";
+
+      ranking.forEach((item, position) => {
+
+        const name = String(classes[item.index])
+          .replace("___", " - ")
+          .replace(/_/g, " ");
+
+        const percentage = (item.score * 100).toFixed(2);
+
+        const div = document.createElement("div");
+        div.className = "prediction";
+
+        const heading = document.createElement("strong");
+        heading.textContent = (position + 1) + ". " + name;
+
+        const confidence = document.createElement("p");
+        confidence.textContent =
+          "Confidence: " + percentage + "%";
+
+        div.appendChild(heading);
+        div.appendChild(confidence);
+        results.appendChild(div);
+      });
+
+      inputTensor.delete();
+      outputs.forEach(t => t.delete());
+
+      status.innerText = "Prediction completed!";
+    }
+
+    document.getElementById("startButton")
+      .addEventListener("click", async () => {
+
+        const button = document.getElementById("startButton");
+        button.disabled = true;
+
+        try {
+          status.innerText = "Starting...";
+
+          await loadAI();
+
+          status.innerText = "Capturing plant image...";
+
+          await captureAndPredict();
+
+        } catch (error) {
+          console.error(error);
+          status.innerText = "ERROR: " + error.message;
+
+        } finally {
+          button.disabled = false;
+        }
+      });
+
+  </script>
+
+</body>
+</html>
