@@ -84,6 +84,161 @@
     let model = null;
     let classes = [];
     let oldImageURL = null;
+    // Treatment and prevention information for all 38 classes
+const diseaseCare = {
+  "Apple___Apple_scab": {
+    treatment: "Remove fallen and infected leaves. Use a fungicide approved for apple scab when recommended locally.",
+    prevention: "Clear fallen leaves, prune for airflow, and choose resistant apple varieties."
+  },
+  "Apple___Black_rot": {
+    treatment: "Prune out infected branches and remove rotting fruit. Use a locally approved fungicide if advised.",
+    prevention: "Remove mummified fruit, prune dead wood, and avoid tree injuries."
+  },
+  "Apple___Cedar_apple_rust": {
+    treatment: "Remove nearby infected cedar galls where practical. Apply an approved fungicide at the recommended growth stage.",
+    prevention: "Choose resistant varieties and avoid planting susceptible apples near infected junipers."
+  },
+  "Apple___healthy": {
+    treatment: "No disease detected. Continue normal care.",
+    prevention: "Water consistently, prune properly, and inspect leaves regularly."
+  },
+  "Blueberry___healthy": {
+    treatment: "No disease detected. Continue normal care.",
+    prevention: "Maintain acidic soil, good drainage, and regular watering."
+  },
+  "Cherry_(including_sour)___Powdery_mildew": {
+    treatment: "Remove badly affected shoots. Use a fungicide approved for powdery mildew if necessary.",
+    prevention: "Provide good airflow, avoid excessive nitrogen, and keep trees properly pruned."
+  },
+  "Cherry_(including_sour)___healthy": {
+    treatment: "No disease detected. Continue normal care.",
+    prevention: "Prune for airflow, water at the base, and monitor new leaves."
+  },
+  "Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot": {
+    treatment: "Manage crop residue and use a locally recommended fungicide if disease is severe.",
+    prevention: "Grow resistant hybrids, rotate crops, and avoid continuous maize planting."
+  },
+  "Corn_(maize)___Common_rust_": {
+    treatment: "Use a locally approved fungicide when infection is early and significant.",
+    prevention: "Plant resistant hybrids and monitor crops regularly."
+  },
+  "Corn_(maize)___Northern_Leaf_Blight": {
+    treatment: "Remove or manage infected crop residue. Consider an approved fungicide when recommended.",
+    prevention: "Grow resistant hybrids, rotate crops, and manage crop residue."
+  },
+  "Corn_(maize)___healthy": {
+    treatment: "No disease detected. Continue normal care.",
+    prevention: "Maintain balanced nutrition, proper spacing, and regular field monitoring."
+  },
+  "Grape___Black_rot": {
+    treatment: "Remove infected berries and dead clusters. Use a grape-approved fungicide if locally recommended.",
+    prevention: "Prune for airflow, remove fallen fruit, and avoid overhead irrigation."
+  },
+  "Grape___Esca_(Black_Measles)": {
+    treatment: "Prune affected wood during dry weather and remove severely affected vines when necessary. There is no reliable cure for infected wood.",
+    prevention: "Use healthy planting material, protect pruning wounds, and remove infected wood."
+  },
+  "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)": {
+    treatment: "Remove infected leaves and manage fallen plant debris. Use an approved fungicide if advised locally.",
+    prevention: "Improve airflow, avoid wetting foliage, and maintain vineyard sanitation."
+  },
+  "Grape___healthy": {
+    treatment: "No disease detected. Continue normal care.",
+    prevention: "Prune regularly, maintain good drainage, and inspect leaves and fruit."
+  },
+  "Orange___Haunglongbing_(Citrus_greening)": {
+    treatment: "There is no known cure. Contact a local agricultural expert about testing and removal of confirmed infected trees.",
+    prevention: "Use certified disease-free plants and control the Asian citrus psyllid with locally approved methods."
+  },
+  "Peach___Bacterial_spot": {
+    treatment: "Remove badly affected plant material where practical. Copper products may be considered only if approved and recommended locally.",
+    prevention: "Plant resistant varieties, avoid overhead watering, and maintain airflow."
+  },
+  "Peach___healthy": {
+    treatment: "No disease detected. Continue normal care.",
+    prevention: "Prune properly, water at the base, and inspect leaves regularly."
+  },
+  "Pepper,_bell___Bacterial_spot": {
+    treatment: "Remove severely infected plants when necessary. Use only locally approved products recommended for bacterial spot.",
+    prevention: "Use disease-free seeds and seedlings, rotate crops, and avoid handling wet plants."
+  },
+  "Pepper,_bell___healthy": {
+    treatment: "No disease detected. Continue normal care.",
+    prevention: "Maintain good spacing, balanced nutrition, and consistent watering."
+  },
+  "Potato___Early_blight": {
+    treatment: "Remove badly infected leaves. Use a potato-approved early-blight fungicide according to its label if needed.",
+    prevention: "Rotate crops, remove infected debris, and avoid water stress."
+  },
+  "Potato___Late_blight": {
+    treatment: "Remove and safely dispose of infected plants or tubers. Seek urgent local agricultural advice about approved late-blight control.",
+    prevention: "Use certified seed potatoes, avoid prolonged leaf wetness, and inspect crops frequently."
+  },
+  "Potato___healthy": {
+    treatment: "No disease detected. Continue normal care.",
+    prevention: "Use healthy seed potatoes, rotate crops, and maintain proper soil drainage."
+  },
+  "Raspberry___healthy": {
+    treatment: "No disease detected. Continue normal care.",
+    prevention: "Prune old canes, maintain airflow, and avoid waterlogging."
+  },
+  "Soybean___healthy": {
+    treatment: "No disease detected. Continue normal care.",
+    prevention: "Use healthy seeds, rotate crops, and monitor plants regularly."
+  },
+  "Squash___Powdery_mildew": {
+    treatment: "Remove badly affected leaves. Use a product approved for powdery mildew on squash if necessary.",
+    prevention: "Provide good spacing, grow resistant varieties, and avoid excessive shade."
+  },
+  "Strawberry___Leaf_scorch": {
+    treatment: "Remove affected leaves and manage infected plant debris. Ask a local expert about suitable fungicide options if severe.",
+    prevention: "Use healthy planting material, improve airflow, and avoid overhead watering."
+  },
+  "Strawberry___healthy": {
+    treatment: "No disease detected. Continue normal care.",
+    prevention: "Use clean planting material, maintain drainage, and remove old leaves."
+  },
+  "Tomato___Bacterial_spot": {
+    treatment: "Remove severely infected plants when necessary. Use only locally approved bacterial-spot management products.",
+    prevention: "Use disease-free seeds, rotate crops, and avoid working with wet plants."
+  },
+  "Tomato___Early_blight": {
+    treatment: "Remove infected lower leaves. Use a tomato-approved early-blight fungicide according to its label if needed.",
+    prevention: "Mulch soil, water at the base, rotate crops, and provide good airflow."
+  },
+  "Tomato___Late_blight": {
+    treatment: "Remove and safely dispose of infected plants. Seek prompt local agricultural advice about approved late-blight control.",
+    prevention: "Use healthy seedlings, avoid prolonged leaf wetness, and inspect plants frequently."
+  },
+  "Tomato___Leaf_Mold": {
+    treatment: "Remove infected leaves. Improve ventilation and use an approved fungicide only if recommended.",
+    prevention: "Reduce humidity, improve airflow, and avoid overhead watering."
+  },
+  "Tomato___Septoria_leaf_spot": {
+    treatment: "Remove infected lower leaves and dispose of plant debris. Use an approved fungicide if necessary.",
+    prevention: "Rotate crops, mulch soil, and water at the base of plants."
+  },
+  "Tomato___Spider_mites Two-spotted_spider_mite": {
+    treatment: "Wash mites from leaves with water. Use insecticidal soap or another locally approved miticide according to its label.",
+    prevention: "Monitor leaf undersides, reduce dust, and avoid excessive dry conditions."
+  },
+  "Tomato___Target_Spot": {
+    treatment: "Remove affected leaves and manage plant debris. Use a locally approved fungicide if recommended.",
+    prevention: "Improve airflow, rotate crops, and avoid overhead irrigation."
+  },
+  "Tomato___Tomato_Yellow_Leaf_Curl_Virus": {
+    treatment: "There is no direct cure. Remove confirmed infected plants and manage whiteflies using locally approved methods.",
+    prevention: "Use healthy seedlings, control whiteflies, remove weeds, and use resistant varieties."
+  },
+  "Tomato___Tomato_mosaic_virus": {
+    treatment: "There is no chemical cure. Remove infected plants and disinfect tools before handling healthy plants.",
+    prevention: "Use certified seeds, wash hands, disinfect tools, and avoid tobacco contamination."
+  },
+  "Tomato___healthy": {
+    treatment: "No disease detected. Continue normal care.",
+    prevention: "Water consistently, provide adequate sunlight, and inspect leaves regularly."
+  }
+};
 
     const status = document.getElementById("status");
     const results = document.getElementById("results");
