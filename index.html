@@ -355,28 +355,62 @@ const diseaseCare = {
 
       results.innerHTML = "";
 
-      ranking.forEach((item, position) => {
+    ranking.forEach((item, position) => {
 
-        const name = String(classes[item.index])
-          .replace("___", " - ")
-          .replace(/_/g, " ");
+  const originalName = String(classes[item.index]);
 
-        const percentage = (item.score * 100).toFixed(2);
+  const name = originalName
+    .replace("___", " - ")
+    .replace(/_/g, " ");
 
-        const div = document.createElement("div");
-        div.className = "prediction";
+  const percentage = (item.score * 100).toFixed(2);
 
-        const heading = document.createElement("strong");
-        heading.textContent = (position + 1) + ". " + name;
+  const div = document.createElement("div");
+  div.className = "prediction";
 
-        const confidence = document.createElement("p");
-        confidence.textContent =
-          "Confidence: " + percentage + "%";
+  const heading = document.createElement("strong");
+  heading.textContent = (position + 1) + ". " + name;
 
-        div.appendChild(heading);
-        div.appendChild(confidence);
-        results.appendChild(div);
-      });
+  const confidence = document.createElement("p");
+  confidence.textContent = "Confidence: " + percentage + "%";
+
+  div.appendChild(heading);
+  div.appendChild(confidence);
+
+  // Show treatment only for the highest prediction
+  if (position === 0) {
+
+    const care = diseaseCare[originalName];
+
+    const careBox = document.createElement("div");
+    careBox.className = "care-box";
+
+    const treatmentTitle = document.createElement("h3");
+    treatmentTitle.textContent = "Recommended Treatment";
+
+    const treatmentText = document.createElement("p");
+    treatmentText.textContent = care
+      ? care.treatment
+      : "Treatment information is not available for this class.";
+
+    const preventionTitle = document.createElement("h3");
+    preventionTitle.textContent = "Prevention";
+
+    const preventionText = document.createElement("p");
+    preventionText.textContent = care
+      ? care.prevention
+      : "Consult a local agricultural expert.";
+
+    careBox.appendChild(treatmentTitle);
+    careBox.appendChild(treatmentText);
+    careBox.appendChild(preventionTitle);
+    careBox.appendChild(preventionText);
+
+    div.appendChild(careBox);
+  }
+
+  results.appendChild(div);
+});
 
       inputTensor.delete();
       outputs.forEach(t => t.delete());
